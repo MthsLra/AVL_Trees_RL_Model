@@ -4,42 +4,7 @@ import pandas as pd
 from collections import deque
 import os.path
 import pickle 
-
-'''
-# Implement bfs to make rotations easier
-def bfs(root):
-
-    # If tree is empty
-    if not root:
-        return []
-    
-    result = []
-    queue = deque([root])
-
-    while queue:
-        node = queue.popleft()
-        if node:
-            result.append(node.value)
-            queue.append(node.left)
-            queue.append(node.right)
-        else:
-            result.append(None)
-    
-    # Optional: remove trailing None values
-    while result and result[-1] is None:
-        result.pop()
-    
-    return result
-'''
-'''
-# Create random bst and put the in an array after applying bfs 
-def create_dataset():
-    trees = []
-    for _ in range(100):
-        new_bst = bst(height = random.randint(3, 7))
-        trees.append(new_bst.inorder)
-    return trees
-'''
+from utils.tree_utils import imbalance 
 
 def create_dataset():
     trees = {}
@@ -53,18 +18,6 @@ def create_dataset():
         trees_balances[i] = balances
         balances = []
     return (trees_balances, trees)
-
-def imbalance(root):
-
-    # If it is a leaf 
-    if root.left == None and root.right == None:
-        return 0
-    elif root.left == None:
-        return root.right.height
-    elif root.right == None:
-        return root.left.height
-    else:
-        return abs(root.left.height - root.right.height)
     
 
 
