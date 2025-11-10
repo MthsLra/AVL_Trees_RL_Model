@@ -3,6 +3,7 @@ import torchrl.envs as envBase
 import copy 
 import os.path
 import pickle
+from rotations import *
 
 
 class BalancingTreeRL(envBase):
@@ -20,7 +21,7 @@ class BalancingTreeRL(envBase):
     def _load_trees(filename):
         with open(filename, "rb") as f:
             data = pickle.load(f)
-            print(data)
+            print(data) 
         return data
         
     def reset(self, **kwargs):
@@ -47,10 +48,16 @@ class BalancingTreeRL(envBase):
         return 
     
     def apply_action(self, tree, action):
-        return 
+        if action == 0:
+            tree_modified = left_rotate(tree)
+        elif action == 1:
+            tree_modified = self.tree.right_rotate(tree)
+        else:
+            tree_modified = tree
+        return tree_modified
     
     def get_rewards(self, tree):
-        return 
+        return self.imbalance(tree)
     
     def vectorize_tree(self, tree):
         return 
