@@ -1,4 +1,6 @@
 from binarytree import bst
+from torch_geometric import data
+import torch 
 
 # Balance analysis 
 def imbalance(root):
@@ -33,3 +35,42 @@ def vectorize_tree(tree):
     for n in tree.inorder:
       vectorized.append(imbalance(n))
     return vectorized 
+
+def bst_to_pyg(root):
+   
+    if root is None:
+        return None
+    
+    # Traverse nodes and assign ids
+    nodes = []
+    def dfs(node):
+        if node is None:
+          return None
+        idx = len(nodes)
+        nodes.append(node)
+        dfs(node.left)
+        dfs(node.right)
+    dfs(root)
+
+    node_to_idx = {node: i for i, node in enumerate(nodes)}
+
+    # Index the edges (directed)
+    edge_index = []
+    for parent in nodes:
+        parent_idx = node_to_idx[parent]
+        if parent.left is not None:
+          edge_index.append([parent_idx, node_to_idx[parent.left]])
+        if parent.right is not None:
+          edge_index.append([parent_idx, node_to_idx[parent.right]])
+
+    
+    if edge_index:
+       edge_index = torch.tensor(edge_index, dtype =torch.long).t().contiguous()
+
+    else:
+       edge_index = torch.tensor((2, 0), dtype=torch.long)
+
+    x = torch.tensor([[node.value] for node in nodes], dtype = torch.float)
+
+    return data(x=x, edge_index = edge_index)
+
