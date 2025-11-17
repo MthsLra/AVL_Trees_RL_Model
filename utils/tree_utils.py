@@ -1,6 +1,7 @@
 from binarytree import bst
 from torch_geometric import data
 import torch 
+from collections import deque
 
 # Balance analysis 
 def imbalance(root):
@@ -14,6 +15,27 @@ def imbalance(root):
     else:
         return abs(root.left.height - root.right.height)
     
+def total_imbalance(root):
+    visited = []
+    avl_violations = 0
+    q = deque()
+    q.append(root)
+    while not q.empty():
+        node = q.pop()
+        visited.append(node)
+        if abs(imbalance(node)) > 1:
+            avl_violations += 1
+
+        if node.left != None and node.left not in visited:
+           q.append(node.left)
+
+        if node.right != None and node.right not in visited:
+           q.append(node.right)
+
+    return avl_violations
+        
+    
+        
 # Rotations functions
 def rightRotate(y):
   x = y.left
@@ -29,13 +51,7 @@ def leftRotate(x):
   x.right = T2
   return y
 
-# Vectorized form of the tree in terms of how each node is balanced
-def vectorize_tree(tree):
-    vectorized = []
-    for n in tree.inorder:
-      vectorized.append(imbalance(n))
-    return vectorized 
-
+# Transform the bst tree as a pyg object (necessary for the tree to be inputed in the neural network)
 def bst_to_pyg(root):
    
     if root is None:
