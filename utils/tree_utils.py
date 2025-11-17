@@ -54,6 +54,11 @@ def bst_to_pyg(root):
 
     node_to_idx = {node: i for i, node in enumerate(nodes)}
 
+    feats = []
+    for node in nodes:
+        bf = imbalance(node)
+        feats.append([node.value, bf])
+
     # Index the edges (directed)
     edge_index = []
     for parent in nodes:
@@ -70,7 +75,7 @@ def bst_to_pyg(root):
     else:
        edge_index = torch.tensor((2, 0), dtype=torch.long)
 
-    x = torch.tensor([[node.value] for node in nodes], dtype = torch.float)
+    x = torch.tensor(feats, dtype = torch.float)
 
     return data(x=x, edge_index = edge_index)
 
