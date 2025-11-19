@@ -1,9 +1,10 @@
-import torch
-import torchrl.envs as envBase
+import torch 
+from torchrl.envs import envBase
 import copy 
 import os.path
 import pickle
 from utils.tree_utils import *
+from tensordict import TensorDict
 
 
 data_path = os.path.join("..", "data", "dataset_trees.pkl")
@@ -12,7 +13,7 @@ data_path = os.path.join("..", "data", "dataset_trees.pkl")
 class BalancingTreeRL(envBase):
 
     def __init__(self,reuse_per_tree = 10, **kwargs):
-        super.__init__()
+        super().__init__()
 
         self.reuse_per_tree = reuse_per_tree
         self.episode_counter = 0
@@ -34,7 +35,7 @@ class BalancingTreeRL(envBase):
         
         # We setup a new tree and change it every 10 episodes 
         if self.episode_counter % self.reuse_per_tree == 0 :
-            self.tree_index = (self.tree_index + 1) % len(self.tree_pyg)
+            self.tree_index = (self.tree_index + 1) % len(self.trees)
             self.og_tree = self.trees[self.tree_index]
         
         # We keep using the same tree
@@ -47,7 +48,12 @@ class BalancingTreeRL(envBase):
 
         obs = bst_to_pyg(self.tree)
         
-        return obs
+        return TensorDict({
+            "x" : obs['x'],
+            'edge_index' : obs['edge_index'],
+        }, batch_size=[])
+            
+        
     
     def step(self, action):
 
@@ -56,16 +62,19 @@ class BalancingTreeRL(envBase):
 
         # Compute the new imbalance and the reward is computed as the difference between the imabalance before and after the rotation was applied 
         new_imbalance = total_imbalance(self.tree)
-        reward = self.prev_imbalance - new_imbalance
+        reward = torch.tensor(self.prev_imbalance - new_imbalance, dtype = torch.float32)
         self.prev_imbalance = new_imbalance
 
         # The obsesrvation is the rotated tree vectorized as a pyg object 
-        obs = self.bst_to_pyg(self.tree)
+        obs = bst_to_pyg(self.tree)
 
         # If the rotated tree is an avl tree we finish the episode 
-        done = (new_imbalance == 1)
+        done = (new_imbalance == 0)
 
-        return obs, reward, done, {}
+        return TensorDict({
+            'x' : obs["x"],
+            'edge_index' : obs['edge_index'],
+        }, batch_size=[]), reward, done, {}
     
     def apply_action(self, tree, action):
         if action == 0:
