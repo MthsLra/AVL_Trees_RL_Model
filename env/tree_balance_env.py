@@ -5,6 +5,12 @@ import os.path
 import pickle
 from utils.tree_utils import *
 from tensordict import TensorDict
+from torchrl.data import (
+    DiscreteTensorSpec,
+    TensorDictSpec,
+    UnboundedContinuousTensorSpec,
+    UnboundedDiscreteTensorSpec,
+)
 
 
 data_path = os.path.join("..", "data", "dataset_trees.pkl")
@@ -23,6 +29,34 @@ class BalancingTreeRL(envBase):
         self.og_tree = None
         self.prev_imbalance = None 
 
+        sample_obs = bst_to_pyg(self.trees[0])
+        feature_dim = sample_obs['x'].shape[-1]
+
+        self.observation_spec = TensorDictSpec({
+            'x' : UnboundedContinuousTensorSpec(
+                shape = (None, feature_dim),
+                dtype = torch.float32
+            ), 
+            'edge_index' : UnboundedDiscreteTensorSpec(
+                shape = (2, None),
+                dtype = torch.long
+            )
+        })
+
+        self.action_spec = DiscreteTensorSpec (
+            n = 2,
+            dtype = torch.long
+        )
+
+        self.reward_spec = UnboundedContinuousTensorSpec (
+            shape = (),
+            dtype = torch.float32
+        )
+
+        self.done_spec = UnboundedDiscreteTensorSpec(
+            shape = (),
+            dtype = torch.bool
+        )
         self.reset()
     
     def _load_trees(filename):
